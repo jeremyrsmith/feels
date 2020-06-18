@@ -108,7 +108,8 @@ class FeelsUI {
         // we'll limit to 1000 steps per frame, just to make sure the UI isn't blocked.
         if (this.interpreter) {
             for (let i = 0; i < 1000; i++) {
-                this.step();
+                if (!this.step())
+                    return;
             }
             this.showPos();
         } else {
@@ -129,9 +130,11 @@ class FeelsUI {
     }
 
     step() {
-        if (!this.interpreter.step(output => this.appendOutput(output))) {
+        const cont = this.interpreter.step(output => this.appendOutput(output))
+        if (!cont) {
             this.finishRun();
         }
+        return cont;
     }
 
     appendOutput(output) {
