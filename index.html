@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>feels</title>
+    <link rel="stylesheet" type="text/css" href="ui.css">
+    <script type="application/javascript" src="feels.js"></script>
+</head>
+<body>
+<div id="main">
+    <h1>feels</h1>
+    <h2>a useless language for a hopeless world</h2>
+
+    <section>
+        <h3>
+            run your feels
+            <select id="examples" onchange="if (this.selectedIndex > 0) ui.input.value = this.options[this.selectedIndex].value;">
+                <option>Examples</option>
+                <option value="AHHHHH! AAAAH!!!!&#10;GAAAHHHHH!!! AAAAAGHHH!!!&#10;WAAAAAAAGHHHH! WAAAAAaaaaa! GWAAAGHHHHH!!!&#10;&#10;AAAAAAHH😡!! AHHHHH!!!!!!&#10;GAAAAAHHHH! AAAAAAAGHHH! AAAAAAAHHH!!! WAaHhG!&#10;&#10;AAAAAAAHHH!!!!! AHHh!!&#10;&#10;GWhhaHHGAHHHW! GAHHHHH! AGHHH!&#10;&#10;FFFFFUUUUUUUUU!!!!&#10;&#10;😢">Hello World</option>
+            </select>
+        </h3>
+        <div id="ide">
+            <label>
+                <span>Program source</span>
+                <textarea class="source" style="visibility: hidden">AHHHHH! AAAAH!!!!
+GAAAHHHHH!!! AAAAAGHHH!!!
+WAAAAAAAGHHHH! WAAAAAaaaaa! GWAAAGHHHHH!!!
+
+AAAAAAHH😡!! AHHHHH!!!!!!
+GAAAAAHHHH! AAAAAAAGHHH! AAAAAAAHHH!!! WAaHhG!
+
+AAAAAAAHHH!!!!! AHHh!!
+
+GWhhaHHGAHHHW! GAHHHHH! AGHHH!
+
+FFFFFUUUUUUUUU!!!!
+
+😢</textarea>
+            </label>
+            <label>
+                <span>Output</span>
+                <textarea class="output" readonly="readonly" style="height: 4em"></textarea>
+            </label>
+            <button type="button" class="run-button">Run</button>
+            <button type="button" class="pause-button">Pause</button>
+        </div>
+    </section>
+    
+    <section>
+        <h3>the feels</h3>
+        <p>
+            Feels is essentially <a href="https://en.wikipedia.org/wiki/Brainfuck">brainf*ck</a>, with different tokens
+            and a few extra operations. A program is just a string of operations, which runs in a primitive
+            turing machine. There are operations for moving the read/write pointer, manipulating the pointed value,
+            generating randoms, and printing output (there is no input; only destiny and chaos).
+        </p>
+        <p>
+            Play with it above, if you want.
+        </p>
+        <p>
+            A listing of instructions:
+        </p>
+        <table>
+            <thead><tr><th>Instruction</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr>
+                    <th scope="row"><code>G</code></th>
+                    <td>Increment the data pointer (move right on the data tape).</td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>g</code></th>
+                    <td>Decrement the data pointer (move left on the data tape).</td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>U</code></th>
+                    <td>Set the data pointer to 0 (reset the data tape position). Go over your data again and again; it won't change.</td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>A</code></th>
+                    <td>Increment the value at the data pointer. As if that will accomplish anything.</td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>a</code></th>
+                    <td>Decrement the value at the data pointer. Like taxes.</td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>W</code></th>
+                    <td>
+                        XOR the value in the cell to the left with the value at the data pointer and store at the current location.
+                        Sheesh.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>w</code></th>
+                    <td>
+                        XOR the value in the cell to the right with the value at the data pointer and store at the current location.
+                        Why bother?
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>H</code></th>
+                    <td>
+                        Logical shift the value at the data pointer 1 bit to the left.
+                        Accomplish nothing.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>h</code></th>
+                    <td>
+                        Logical shift the value at the data pointer 1 bit to the right.
+                        Accomplish less than nothing.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>F</code></th>
+                    <td>
+                        Arithmetic shift the value at the data pointer 1 bit to the right.
+                        The worst operation.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>R</code></th>
+                    <td>
+                        If the value at the data pointer is zero, jump forward to the instruction after the matching <code>r</code>.
+                        One little clock cycle, and it's ten years later.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>r</code></th>
+                    <td>
+                        If the value at the data pointer is not zero, jump backward to the instruction after the matching <code>R</code>.
+                        Yes, you can move the program counter backward, unlike time's arrow.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">😫</th>
+                    <td>
+                        (or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned below)<br>
+                        Output the value at the data pointer as Unicode codepoint character. 2020 is the worst.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">😢</th>
+                    <td>
+                        (U+1F622) Output the contents of memory starting at the data pointer and treating it as a zero-terminated
+                        string of Unicode codepoints. If you like to save your I/O for the end of the world, this is for you.
+                        Watch the end of the world while you shed a single tear.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">😖</th>
+                    <td>(U+1F616) Output a carriage return <code>\n</code>. Ugh. Come on with this.</td>
+                </tr>
+                <tr>
+                    <th scope="row">😭</th>
+                    <td>(U+1F62D) Set the value at the data pointer to a random 32-bit number, if you must.</td>
+                </tr>
+                <tr>
+                    <th scope="row">😡</th>
+                    <td>(U+1F621) Set the value at the data pointer to zero. What are we even doing?</td>
+                </tr>
+                <tr>
+                    <th scope="row">😱</th>
+                    <td>
+                        (U+1F631) Collapse the value at the data pointer to the unicode BMP codepoint range, by
+                        computing XOR of the lower 16 bits with the upper 16 bits, and overwriting the value with this
+                        16-bit value (<code>0x0000</code> – <code>0xFFFF</code> inclusive). Just as pointless as everything else.
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>😤</code></th>
+                    <td>(U+1F624) Ignore the rest of the line. The only useful thing to do.</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>
+            Whitespace (spaces, tabs, CR, LF) are ignored. <code>U+1F3FB</code> through <code>U+1F3FF</code> (<code>EMOJI MODIFIER FITZPATRICK TYPE</code>s) are ignored.
+            Exclamation marks are ignored!!! So use them freely!!!!!!
+        </p>
+        <p>
+            The source is <a href="https://github.com/jeremyrsmith/feels">here</a>. Sadly, it's not written in feels. 😫
+        </p>
+    </section>
+</div>
+<script type="application/javascript" src="ui.js"></script>
+<script type="application/javascript">
+    var ui = new FeelsUI(document.getElementById("ide"));
+</script>
+</body>
+</html>

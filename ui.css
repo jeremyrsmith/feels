@@ -1,0 +1,72 @@
+body {
+    font-family: sans-serif;
+    font-size: 14pt;
+    color: #606060;
+    background: #fafafa;
+    line-height: 1.5;
+    padding: 0 2em;
+}
+
+#main {
+    max-width: 64em;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 150%;
+    border-bottom: 1px solid #aaaaaa;
+    text-align: center;
+    margin-bottom: 0;
+    letter-spacing: .2em;
+}
+
+h2 {
+    font-size: 108.3%;
+    text-align: center;
+    margin-top: 0;
+    color: #aaaaaa;
+    letter-spacing: .06em;
+}
+
+section {
+    margin: 0 0 4em;
+}
+
+#ide label {
+    display: block;
+    font-size: 75%;
+    margin-bottom: 1em;
+}
+
+textarea {
+    display: block;
+    width: 100%;
+    font-size: 14pt;
+    background: #333333;
+    color: #eaeaea;
+}
+
+textarea.source {
+    min-height: 22em;
+}
+
+table {
+    font-size: 82%;
+}
+
+thead th {
+    text-align: left;
+    border-bottom: 1px solid #eaeaea;
+}
+
+table thead th, table tbody td {
+    padding: 0.5em;
+}
+
+table tbody tr:nth-child(2n) {
+    background-color: #f3f3f3;
+}
+
+table tbody th {
+    padding: .5em 0;
+}
