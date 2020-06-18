@@ -14,9 +14,10 @@ const Feels = (function () {
         w - XOR the value in the cell to the right with the value at the data pointer and store at the current location
         H - Logical shift the value at the data pointer 1 bit to the left
         h - Logical shift the value at the data pointer 1 bit to the right
-        F - Arithmetic shift the value at the data pointer 1 bit to the right
         R – if the value at the data pointer is zero, jump forward to the instruction after the matching `r`
         r - if the value at the data pointer is not zero, jump backward to the instruction after the matching `R`
+        F or 🤬 - store the value at the data pointer in the register.
+        f or 😕 - load the value in the register to the tape at the current location
         😫 (or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned below) – output the value at the data pointer as Unicode codepoint character
         😢 (U+1F622) – output the contents of memory starting at the data pointer and treating it as a zero-terminated string of Unicode codepoints
         😖 (U+1F616) - output a carriage return '\n'
@@ -94,6 +95,12 @@ const Feels = (function () {
         // data pointer
         let dp = 0;
 
+        // data pointer stack – not sure if this will get an instruction pair
+        const dpStack = [];
+
+        // register
+        let reg = 0;
+
         function getValue(at) {
             if (typeof(at) === 'undefined') {
                 at = dp;
@@ -132,6 +139,10 @@ const Feels = (function () {
         this.shiftRight = () => { setValue(getValue() >>> 1); return this; };
         this.arithmeticShiftRight = () => { setValue(getValue() >> 1); return this; };
         this.collapseUnicode = () => { setValue(collapse(getValue())); return this; };
+        this.store = () => { reg = getValue(); return this; };
+        this.load = () => { setValue(reg); return this; };
+        this.push = () => { dpStack.push(dp); return this; };
+        this.pop = () => { dp = dpStack.pop() || 0; return this; }
 
         this.jumpIfNonzero = dst => {
             if (getValue()) {
@@ -160,6 +171,7 @@ const Feels = (function () {
     function Interpreter(instructions) {
         let state = new State();
         this.getProgramCounter = () => state.getPc();
+        let currentPos = 0;
 
         // evaluate one instruction, returning true if the program is still running
         // and false if it's halted.
@@ -169,13 +181,16 @@ const Feels = (function () {
                 return false;
             }
 
-            const instruction = instructions[pc]
+            const [pos, instruction] = instructions[pc];
+            currentPos = pos;
             state = instruction(state, output);
             // debug fun
             // console.log(instruction, state.getPc(), state.getDp(), state.positiveMem.map(dec => (dec >>> 0).toString(2)).join(', '));
             state = state.incrementPc();
             return true;
         }
+
+        this.getPos = () => currentPos;
     }
 
     /**
@@ -191,21 +206,26 @@ const Feels = (function () {
         for (i = 0; i < input.length; i++) {
             const char = input[i];
             switch (char) {
-                case 'G': instructions.push(state => state.next()); break;
-                case 'g': instructions.push(state => state.prev()); break;
-                case 'A': instructions.push(state => state.increment()); break;
-                case 'a': instructions.push(state => state.decrement()); break;
-                case 'W': instructions.push(state => state.xorLeft()); break;
-                case 'w': instructions.push(state => state.xorRight()); break;
-                case 'H': instructions.push(state => state.shiftLeft()); break;
-                case 'h': instructions.push(state => state.shiftRight()); break;
-                case 'F': instructions.push(state => state.arithmeticShiftRight()); break;
-                case 'U': instructions.push(state => state.rew()); break;
-                case '😢': instructions.push((state, output) => state.outputCString(output)); break;
-                case '😖': instructions.push((state, output) => { output("\n"); return state; }); break;
-                case '😭': instructions.push(state => state.setRandom()); break;
-                case '😡': instructions.push(state => state.setZero()); break;
-                case '😱': instructions.push(state => state.collapseUnicode()); break;
+                case 'G': instructions.push([i, state => state.next()]); break;
+                case 'g': instructions.push([i, state => state.prev()]); break;
+                case 'A': instructions.push([i, state => state.increment()]); break;
+                case 'a': instructions.push([i, state => state.decrement()]); break;
+                case 'W': instructions.push([i, state => state.xorLeft()]); break;
+                case 'w': instructions.push([i, state => state.xorRight()]); break;
+                case 'H': instructions.push([i, state => state.shiftLeft()]); break;
+                case 'h': instructions.push([i, state => state.shiftRight()]); break;
+                case 'U': instructions.push([i, state => state.rew()]); break;
+                case '😢': instructions.push([i, (state, output) => state.outputCString(output)]); break;
+                case '😖': instructions.push([i, (state, output) => { output("\n"); return state; }]); break;
+                case '😭': instructions.push([i, state => state.setRandom()]); break;
+                case '😡': instructions.push([i, state => state.setZero()]); break;
+                case '😱': instructions.push([i, state => state.collapseUnicode()]); break;
+                case 'F':
+                case '🤬':
+                    instructions.push([i, state => state.store()]); break;
+                case 'f':
+                case '😕':
+                    instructions.push([i, state => state.load()]); break;
                 case '😤':
                     while (i < input.length && input[i] !== "\n") {
                         i++;
@@ -213,7 +233,7 @@ const Feels = (function () {
                     break;
                 case 'R':
                     jumpStack.push(instructions.length);
-                    instructions.push(placeholder);
+                    instructions.push([i, placeholder]);
                     break;
                 case 'r':
                     if (!jumpStack.length) {
@@ -221,8 +241,8 @@ const Feels = (function () {
                     }
                     const start = jumpStack.pop();
                     const end = instructions.length;
-                    instructions.push(state => state.jumpIfNonzero(start));
-                    instructions[start] = state => state.jumpIfZero(end);
+                    instructions.push([i, state => state.jumpIfNonzero(start)]);
+                    instructions[start][1] = state => state.jumpIfZero(end);
                     break;
                 case '!':
                 case ' ':
@@ -236,7 +256,7 @@ const Feels = (function () {
                 default:
                     const codePoint = char.codePointAt(0);
                     if (codePoint >= 0x1F600 && codePoint <= 0x1FAD6) {
-                        instructions.push((state, output) => state.outputChar(output));
+                        instructions.push([i, (state, output) => state.outputChar(output)]);
                     } else if (codePoint < 0x1F3FB || codePoint > 0x1F3FF) {
                         throw new Error(`Unknown token ${char}`);
                     }

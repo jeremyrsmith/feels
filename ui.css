@@ -50,6 +50,10 @@ textarea.source {
     min-height: 22em;
 }
 
+textarea.output {
+    font-family: monospace;
+}
+
 table {
     font-size: 82%;
 }

@@ -14,9 +14,10 @@
     <section>
         <h3>
             run your feels
-            <select id="examples" onchange="if (this.selectedIndex > 0) ui.input.value = this.options[this.selectedIndex].value;">
+            <select id="examples" onchange="if (this.selectedIndex > 0) ui.loadExample(this.options[this.selectedIndex].value)">
                 <option>Examples</option>
-                <option value="AHHHHH! AAAAH!!!!&#10;GAAAHHHHH!!! AAAAAGHHH!!!&#10;WAAAAAAAGHHHH! WAAAAAaaaaa! GWAAAGHHHHH!!!&#10;&#10;AAAAAAHH😡!! AHHHHH!!!!!!&#10;GAAAAAHHHH! AAAAAAAGHHH! AAAAAAAHHH!!! WAaHhG!&#10;&#10;AAAAAAAHHH!!!!! AHHh!!&#10;&#10;GWhhaHHGAHHHW! GAHHHHH! AGHHH!&#10;&#10;FFFFFUUUUUUUUU!!!!&#10;&#10;😢">Hello World</option>
+                <option value="hello">Hello World</option>
+                <option value="mandlebrot">Mandlebrot set</option>
             </select>
         </h3>
         <div id="ide">
@@ -43,6 +44,7 @@ FFFFFUUUUUUUUU!!!!
             </label>
             <button type="button" class="run-button">Run</button>
             <button type="button" class="pause-button">Pause</button>
+            <button type="button" class="step-button">Step</button>
         </div>
     </section>
     
@@ -112,13 +114,6 @@ FFFFFUUUUUUUUU!!!!
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><code>F</code></th>
-                    <td>
-                        Arithmetic shift the value at the data pointer 1 bit to the right.
-                        The worst operation.
-                    </td>
-                </tr>
-                <tr>
                     <th scope="row"><code>R</code></th>
                     <td>
                         If the value at the data pointer is zero, jump forward to the instruction after the matching <code>r</code>.
@@ -133,9 +128,21 @@ FFFFFUUUUUUUUU!!!!
                     </td>
                 </tr>
                 <tr>
+                    <th scope="row"><code>F or 🤬</code></th>
+                    <td>
+                        (U+1F92C) Store the value from the tape to the register. Yeah there's a register now 🤬!
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><code>f or 😕</code></th>
+                    <td>
+                        (U+1F615) Load the value from the register to the tape. It never ends. Until it does.
+                    </td>
+                </tr>
+                <tr>
                     <th scope="row">😫</th>
                     <td>
-                        (or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned below)<br>
+                        (or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned)<br>
                         Output the value at the data pointer as Unicode codepoint character. 2020 is the worst.
                     </td>
                 </tr>
