@@ -1,5 +1,19 @@
 "use strict";
 
+// compute the line height of the output area
+const outputLineHeight = (function () {
+    const el = document.createElement('div');
+    el.className = 'source';
+    el.innerHTML = 'X';
+    el.style.visibility = 'hidden';
+    document.body.appendChild(el);
+    const result = el.clientHeight;
+    document.body.removeChild(el);
+    return result;
+})();
+
+
+
 class FeelsUI {
     constructor(el) {
         this.el = el;
@@ -21,23 +35,58 @@ class FeelsUI {
         this.input.addEventListener('keydown', evt => this.onKeyDown(evt));
         this.input.addEventListener('input', evt => localStorage.setItem("last_program", this.input.value));
 
-        const prevProgram = localStorage.getItem("last_program");
-        if (prevProgram) {
-            this.input.value = prevProgram;
-        }
+        this.measureInputTextWidth = (() => {
+            const canvas = document.createElement('canvas');
+            canvas.style.visibility = 'hidden';
+            canvas.style.width = '0';
+            canvas.style.height = '0';
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            ctx.font = window.getComputedStyle(this.input).font;
+            return (text) => ctx.measureText(text).width;
+        })();
+
+        this.loadLast();
 
         this.input.style.visibility = 'visible';
 
+        this.running = false;
+        this.worker = new Worker('interpreter-worker.js');
+        this.worker.onmessage = messageEvent => {
+            const msg = messageEvent.data;
+            if (msg instanceof Error) {
+                this.output.classList.add('error');
+                this.output.value = `Compile error:\n${msg.message || "Unknown error"}`;
+                this.finishRun();
+                throw msg;
+            }
 
+            if (msg.output) {
+                this.appendOutput(msg.output);
+            } else if (msg.done) {
+                this.finishRun();
+            } else if (msg.pos !== undefined) {
+                this.lastPos = msg.pos.offset;
+                this.lineNumber = msg.pos.lineNumber;
+                this.linePosition = msg.pos.linePosition;
+                this.showPos();
+                this.scrollToPos();
+            }
+
+        }
+        const sharedBuffer = new SharedArrayBuffer(8);
+        this.sharedBuffer = new Uint32Array(sharedBuffer, 0, 2);
+        this.worker.postMessage({op: 'init', buf: sharedBuffer});
     }
 
     runStop() {
-        if (this.interpreter) {
+        if (this.running) {
             this.finishRun();
         } else {
 
             this.output.value = '';
             this.output.classList.remove('error');
+            this.lastPos = -1;
 
             try {
                 this.compileInput();
@@ -53,23 +102,24 @@ class FeelsUI {
 
     pauseResume() {
         this.paused = !this.paused;
-        if (!this.paused && !this.runInterval) {
-            this.startTicking();
-        }
+        this.sharedBuffer[0] = this.paused ? 1 : 0;
         this.pauseButton.innerHTML = this.paused ? "Resume" : "Pause";
+        if (!this.paused) {
+            this.startRun();
+        }
     }
 
     doStep(evt) {
-        if (!this.interpreter) {
+        if (!this.running) {
             this.compileInput();
             this.pauseButton.innerHTML = "Resume";
+            this.runButton.innerHTML = "Stop";
             this.pauseButton.disabled = false;
             this.input.readOnly = true;
         }
         this.step();
-        this.showPos();
+        this.paused = true;
         evt.preventDefault();
-        console.log(window.getSelection());
     }
 
     startRun() {
@@ -78,6 +128,7 @@ class FeelsUI {
         this.runButton.innerHTML = "Stop";
         this.input.readOnly = true;
         this.startTicking();
+        this.worker.postMessage({op: "run"});
     }
 
     startTicking() {
@@ -97,44 +148,53 @@ class FeelsUI {
         this.input.readOnly = false;
         this.pauseButton.innerHTML = "Pause";
         this.pauseButton.disabled = true;
-        delete this.interpreter;
+        this.running = false;
+        this.sharedBuffer[0] = 1;
+        this.worker.postMessage({op: 'stop'});
+        if (this.prevSelection) {
+            this.input.setSelectionRange(this.prevSelection[0], this.prevSelection[1]);
+        }
     }
 
     tick() {
         this.runInterval = window.requestAnimationFrame(() => this.tick());
-        if (this.paused) {
-            return;
-        }
-        // we'll limit to 1000 steps per frame, just to make sure the UI isn't blocked.
-        if (this.interpreter) {
-            for (let i = 0; i < 1000; i++) {
-                if (!this.step())
-                    return;
-            }
+        const pos = this.sharedBuffer[1];
+        if (pos !== this.lastPos) {
+            this.lastPos = pos;
             this.showPos();
-        } else {
-            this.finishRun();
         }
     }
 
     showPos() {
-        if (this.interpreter) {
-            const pos = this.interpreter.getPos();
-            this.input.setSelectionRange(pos, pos + 1);
-            this.input.focus();
+        this.input.setSelectionRange(this.lastPos, this.lastPos + 1);
+        this.input.focus();
+    }
+
+    scrollToPos() {
+        const line = this.lines[this.lineNumber].substring(0, this.linePosition);
+        const posInLine = Math.round(this.measureInputTextWidth(line));
+        const sourceWidth = Math.floor(this.input.clientWidth);
+        const sourceHeight = Math.floor(this.input.clientHeight);
+        const linePos = this.lineNumber * outputLineHeight;
+
+        if (this.input.scrollTop + sourceHeight < linePos || linePos < this.input.scrollTop) {
+            this.input.scrollTop = Math.floor(linePos / sourceHeight) * sourceHeight;
+        }
+
+        if (this.input.scrollLeft + sourceWidth < posInLine || posInLine < this.input.scrollLeft) {
+            this.input.scrollLeft = Math.floor(posInLine / sourceWidth) * sourceWidth;
         }
     }
 
     compileInput() {
-        this.interpreter = Feels.compile(this.input.value);
+        this.prevSelection = [this.input.selectionStart || 0, this.input.selectionEnd || 0];
+        this.running = true;
+        this.lines = this.input.value.split('\n');
+        this.worker.postMessage({op: 'compile', source: this.input.value});
     }
 
     step() {
-        const cont = this.interpreter.step(output => this.appendOutput(output))
-        if (!cont) {
-            this.finishRun();
-        }
-        return cont;
+        this.worker.postMessage({op: 'step'});
     }
 
     appendOutput(output) {
@@ -157,6 +217,13 @@ class FeelsUI {
             }
         });
         req.send(null);
+    }
+
+    loadLast() {
+        const prevProgram = localStorage.getItem("last_program");
+        if (prevProgram) {
+            this.input.value = prevProgram;
+        }
     }
 
     onKeyDown(evt) {

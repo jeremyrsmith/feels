@@ -203,37 +203,51 @@ const Feels = (function () {
         const instructions = [];
         const placeholder = state => state;
         let i;
+        let bytePos = 0;
+        let lineNumber = 0;
+        let linePosition = 0;
         for (i = 0; i < input.length; i++) {
             const char = input[i];
+            const position = {
+                offset: bytePos,
+                lineNumber: lineNumber,
+                linePosition: linePosition
+            };
+
             switch (char) {
-                case 'G': instructions.push([i, state => state.next()]); break;
-                case 'g': instructions.push([i, state => state.prev()]); break;
-                case 'A': instructions.push([i, state => state.increment()]); break;
-                case 'a': instructions.push([i, state => state.decrement()]); break;
-                case 'W': instructions.push([i, state => state.xorLeft()]); break;
-                case 'w': instructions.push([i, state => state.xorRight()]); break;
-                case 'H': instructions.push([i, state => state.shiftLeft()]); break;
-                case 'h': instructions.push([i, state => state.shiftRight()]); break;
-                case 'U': instructions.push([i, state => state.rew()]); break;
-                case '😢': instructions.push([i, (state, output) => state.outputCString(output)]); break;
-                case '😖': instructions.push([i, (state, output) => { output("\n"); return state; }]); break;
-                case '😭': instructions.push([i, state => state.setRandom()]); break;
-                case '😡': instructions.push([i, state => state.setZero()]); break;
-                case '😱': instructions.push([i, state => state.collapseUnicode()]); break;
+                case 'G': instructions.push([position, state => state.next()]); break;
+                case 'g': instructions.push([position, state => state.prev()]); break;
+                case 'A': instructions.push([position, state => state.increment()]); break;
+                case 'a': instructions.push([position, state => state.decrement()]); break;
+                case 'W': instructions.push([position, state => state.xorLeft()]); break;
+                case 'w': instructions.push([position, state => state.xorRight()]); break;
+                case 'H': instructions.push([position, state => state.shiftLeft()]); break;
+                case 'h': instructions.push([position, state => state.shiftRight()]); break;
+                case 'U': instructions.push([position, state => state.rew()]); break;
+                case '😢': instructions.push([position, (state, output) => state.outputCString(output)]); break;
+                case '😖': instructions.push([position, (state, output) => { output("\n"); return state; }]); break;
+                case '😭': instructions.push([position, state => state.setRandom()]); break;
+                case '😡': instructions.push([position, state => state.setZero()]); break;
+                case '😱': instructions.push([position, state => state.collapseUnicode()]); break;
                 case 'F':
                 case '🤬':
-                    instructions.push([i, state => state.store()]); break;
+                    instructions.push([position, state => state.store()]); break;
                 case 'f':
                 case '😕':
-                    instructions.push([i, state => state.load()]); break;
+                    instructions.push([position, state => state.load()]); break;
                 case '😤':
                     while (i < input.length && input[i] !== "\n") {
                         i++;
+                        if (input[i]) {
+                            bytePos += input[i].length;
+                        }
                     }
+                    lineNumber++;
+                    linePosition = -1;
                     break;
                 case 'R':
                     jumpStack.push(instructions.length);
-                    instructions.push([i, placeholder]);
+                    instructions.push([position, placeholder]);
                     break;
                 case 'r':
                     if (!jumpStack.length) {
@@ -241,12 +255,15 @@ const Feels = (function () {
                     }
                     const start = jumpStack.pop();
                     const end = instructions.length;
-                    instructions.push([i, state => state.jumpIfNonzero(start)]);
+                    instructions.push([position, state => state.jumpIfNonzero(start)]);
                     instructions[start][1] = state => state.jumpIfZero(end);
+                    break;
+                case '\n':
+                    lineNumber++;
+                    linePosition = -1;
                     break;
                 case '!':
                 case ' ':
-                case '\n':
                 case '\r':
                 case '\t':
                 case '.':
@@ -256,11 +273,13 @@ const Feels = (function () {
                 default:
                     const codePoint = char.codePointAt(0);
                     if (codePoint >= 0x1F600 && codePoint <= 0x1FAD6) {
-                        instructions.push([i, (state, output) => state.outputChar(output)]);
+                        instructions.push([position, (state, output) => state.outputChar(output)]);
                     } else if (codePoint < 0x1F3FB || codePoint > 0x1F3FF) {
                         throw new Error(`Unknown token ${char}`);
                     }
             }
+            bytePos += char.length;
+            linePosition += char.length;
         }
 
         return new Interpreter(instructions);

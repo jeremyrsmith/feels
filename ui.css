@@ -41,17 +41,18 @@ section {
 textarea {
     display: block;
     width: 100%;
-    font-size: 14pt;
     background: #333333;
     color: #eaeaea;
+    white-space: pre;
 }
 
 textarea.source {
-    min-height: 22em;
+    /*min-height: 22em;*/
 }
 
-textarea.output {
+.output {
     font-family: monospace;
+    font-size: 11pt;
 }
 
 table {

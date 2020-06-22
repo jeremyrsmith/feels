@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>feels</title>
     <link rel="stylesheet" type="text/css" href="ui.css">
+    <style type="text/css">
+        .source {
+            font-size: 14pt;
+            font-family: sans-serif;
+            line-height: 1.5;
+        }
+    </style>
     <script type="application/javascript" src="feels.js"></script>
 </head>
 <body>
@@ -14,7 +21,7 @@
     <section>
         <h3>
             run your feels
-            <select id="examples" onchange="if (this.selectedIndex > 0) ui.loadExample(this.options[this.selectedIndex].value)">
+            <select id="examples" onchange="if (this.selectedIndex > 0) ui.loadExample(this.options[this.selectedIndex].value); else ui.loadLast()">
                 <option>Examples</option>
                 <option value="hello">Hello World</option>
                 <option value="mandlebrot">Mandlebrot set</option>
@@ -23,7 +30,7 @@
         <div id="ide">
             <label>
                 <span>Program source</span>
-                <textarea class="source" style="visibility: hidden">AHHHHH! AAAAH!!!!
+                <textarea class="source" style="visibility: hidden" rows="20" spellcheck="false">AHHHHH! AAAAH!!!!
 GAAAHHHHH!!! AAAAAGHHH!!!
 WAAAAAAAGHHHH! WAAAAAaaaaa! GWAAAGHHHHH!!!
 
@@ -40,7 +47,7 @@ FFFFFUUUUUUUUU!!!!
             </label>
             <label>
                 <span>Output</span>
-                <textarea class="output" readonly="readonly" style="height: 4em"></textarea>
+                <textarea class="output" readonly="readonly" style="height: 6em"></textarea>
             </label>
             <button type="button" class="run-button">Run</button>
             <button type="button" class="pause-button">Pause</button>
