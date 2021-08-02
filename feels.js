@@ -171,7 +171,11 @@ const Feels = (function () {
     function Interpreter(instructions) {
         let state = new State();
         this.getProgramCounter = () => state.getPc();
-        let currentPos = 0;
+        let currentPos = {
+            offset: 0,
+            lineNumber: 0,
+            linePosition: 0
+        };
 
         // evaluate one instruction, returning true if the program is still running
         // and false if it's halted.
@@ -284,9 +288,6 @@ const Feels = (function () {
 
         return new Interpreter(instructions);
     }
-
-
-
 
     return {
         compile

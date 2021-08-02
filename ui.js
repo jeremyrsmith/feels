@@ -74,9 +74,7 @@ class FeelsUI {
             }
 
         }
-        const sharedBuffer = new SharedArrayBuffer(8);
-        this.sharedBuffer = new Uint32Array(sharedBuffer, 0, 2);
-        this.worker.postMessage({op: 'init', buf: sharedBuffer});
+        this.worker.postMessage({op: 'init'});
     }
 
     runStop() {
@@ -102,7 +100,7 @@ class FeelsUI {
 
     pauseResume() {
         this.paused = !this.paused;
-        this.sharedBuffer[0] = this.paused ? 1 : 0;
+        this.worker.postMessage({op: this.paused ? "pause" : "run"})
         this.pauseButton.innerHTML = this.paused ? "Resume" : "Pause";
         if (!this.paused) {
             this.startRun();
@@ -127,41 +125,18 @@ class FeelsUI {
         this.pauseButton.innerHTML = "Pause";
         this.runButton.innerHTML = "Stop";
         this.input.readOnly = true;
-        this.startTicking();
         this.worker.postMessage({op: "run"});
     }
 
-    startTicking() {
-        this.runInterval = window.requestAnimationFrame(() => this.tick());
-    }
-
-    stopTicking() {
-        if (this.runInterval) {
-            window.cancelAnimationFrame(this.runInterval);
-            delete this.runInterval;
-        }
-    }
-
     finishRun() {
-        this.stopTicking();
         this.runButton.innerHTML = "Run";
         this.input.readOnly = false;
         this.pauseButton.innerHTML = "Pause";
         this.pauseButton.disabled = true;
         this.running = false;
-        this.sharedBuffer[0] = 1;
         this.worker.postMessage({op: 'stop'});
         if (this.prevSelection) {
             this.input.setSelectionRange(this.prevSelection[0], this.prevSelection[1]);
-        }
-    }
-
-    tick() {
-        this.runInterval = window.requestAnimationFrame(() => this.tick());
-        const pos = this.sharedBuffer[1];
-        if (pos !== this.lastPos) {
-            this.lastPos = pos;
-            this.showPos();
         }
     }
 

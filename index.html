@@ -24,7 +24,7 @@
             <select id="examples" onchange="if (this.selectedIndex > 0) ui.loadExample(this.options[this.selectedIndex].value); else ui.loadLast()">
                 <option>Examples</option>
                 <option value="hello">Hello World</option>
-                <option value="mandlebrot">Mandlebrot set</option>
+                <option value="mandelbrot">Mandelbrot set</option>
             </select>
         </h3>
         <div id="ide">
@@ -58,10 +58,21 @@ FFFFFUUUUUUUUU!!!!
     <section>
         <h3>the feels</h3>
         <p>
-            Feels is essentially <a href="https://en.wikipedia.org/wiki/Brainfuck">brainf*ck</a>, with different tokens
-            and a few extra operations. A program is just a string of operations, which runs in a primitive
-            turing machine. There are operations for moving the read/write pointer, manipulating the pointed value,
-            generating randoms, and printing output (there is no input; only destiny and chaos).
+            Feels is a &ldquo;programming language&rdquo; that was made during the 2020 pandemic lockdown/election
+            cycle/civil unrest/all-around declining mental health. Its purpose is not to be a useful language,
+            but to be a cathartic one. Write a program while you scream into the void!
+        </p>
+        <p>
+            It is heavily inspired by (and is a superset of) <a href="https://en.wikipedia.org/wiki/Brainfuck">brainf*ck</a>,
+            but with different tokens and a few extra operations. A program is just a string of operations, which runs
+            in a primitive turing machine. There are operations for moving the read/write pointer, manipulating the
+            pointed value, generating randoms, and printing output (i.e. there is no input; only destiny and chaos).
+        </p>
+        <p>
+            Each memory location in the turing machine is a number. Feels wants it to be a limitless number, but
+            unfortunately, life is full of limits. In this implementation, each memory location is a JavaScript number,
+            whatever that means. Because the interpreter is implemented in JavaScript. So that it can run in your
+            browser. Every browser cycle it steals from The Rest Of The Internet is probably for the best.
         </p>
         <p>
             Play with it above, if you want.
@@ -90,7 +101,7 @@ FFFFFUUUUUUUUU!!!!
                 </tr>
                 <tr>
                     <th scope="row"><code>a</code></th>
-                    <td>Decrement the value at the data pointer. Like taxes.</td>
+                    <td>Decrement the value at the data pointer. Like time decrements your life.</td>
                 </tr>
                 <tr>
                     <th scope="row"><code>W</code></th>
@@ -149,7 +160,7 @@ FFFFFUUUUUUUUU!!!!
                 <tr>
                     <th scope="row">😫</th>
                     <td>
-                        (or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned)<br>
+                        (U+1F62B, or any other emoji between U+1F600 and U+1FAD6, besides the special ones mentioned)<br>
                         Output the value at the data pointer as Unicode codepoint character. 2020 is the worst.
                     </td>
                 </tr>
@@ -163,11 +174,11 @@ FFFFFUUUUUUUUU!!!!
                 </tr>
                 <tr>
                     <th scope="row">😖</th>
-                    <td>(U+1F616) Output a carriage return <code>\n</code>. Ugh. Come on with this.</td>
+                    <td>(U+1F616) Output a linefeed <code>\n</code>. Ugh. Come on with this.</td>
                 </tr>
                 <tr>
                     <th scope="row">😭</th>
-                    <td>(U+1F62D) Set the value at the data pointer to a random 32-bit number, if you must.</td>
+                    <td>(U+1F62D) Set the value at the data pointer to a random 32-bit number. You won't get the one you wanted.</td>
                 </tr>
                 <tr>
                     <th scope="row">😡</th>
@@ -178,7 +189,8 @@ FFFFFUUUUUUUUU!!!!
                     <td>
                         (U+1F631) Collapse the value at the data pointer to the unicode BMP codepoint range, by
                         computing XOR of the lower 16 bits with the upper 16 bits, and overwriting the value with this
-                        16-bit value (<code>0x0000</code> – <code>0xFFFF</code> inclusive). Just as pointless as everything else.
+                        16-bit value (<code>0x0000</code> – <code>0xFFFF</code> inclusive). Just as pointless as everything else,
+                        but here we are.
                     </td>
                 </tr>
                 <tr>

@@ -2,9 +2,9 @@
 
 importScripts('feels.js');
 
-
-let interpreter;
-let sharedBuffer;
+let interpreter,
+    timeout,
+    pause = false;
 
 
 function step() {
@@ -13,23 +13,31 @@ function step() {
         postMessage({done: true});
     }
     const pos = interpreter.getPos();
-    sharedBuffer[1] = pos.offset;
     postMessage({pos});
 }
 
 function run() {
-    while (true) {
-        if (sharedBuffer[0] !== 0) {
-            const pos = interpreter.getPos();
-            postMessage({pos});
-            return;
+    try {
+        function go() {
+            // yield the thread at least every 150-300ms, to allow messages to process
+            const until = performance.now() + 150;
+            while (performance.now() < until) {
+                for (let i = 0; i < 1000; i++) {
+                    if (!interpreter.step(output => postMessage({output}))) {
+                        interpreter = null;
+                        postMessage({done: true});
+                        return;
+                    }
+                }
+            }
+
+            if (!pause) {
+                timeout = setTimeout(go, 0);
+            }
         }
-        if (!interpreter.step(output => postMessage({output}))) {
-            interpreter = null;
-            postMessage({done: true});
-            return;
-        }
-        sharedBuffer[1] = interpreter.getPos().offset;
+        go();
+    } catch (err) {
+        postMessage(err);
     }
 }
 
@@ -38,7 +46,6 @@ onmessage = messageEvent => {
     const msg = messageEvent.data;
     switch (msg.op) {
         case 'init':
-            sharedBuffer = new Uint32Array(msg.buf, 0, 2);
             break;
         case 'compile':
             try {
@@ -48,18 +55,22 @@ onmessage = messageEvent => {
             }
             break;
         case 'run':
-            try {
-                run();
-                sharedBuffer[0] = 0;
-            } catch (err) {
-                postMessage(err);
+            pause = false;
+            run();
+            break;
+        case 'pause':
+            pause = true;
+            if (timeout) {
+                clearTimeout(timeout);
             }
+            postMessage({pos: interpreter.getPos()});
             break;
         case 'step':
             step();
             break;
         case 'stop':
+            pause = true;
+            clearInterval(timeout);
             interpreter = null;
-            sharedBuffer[0] = 0;
     }
 }
